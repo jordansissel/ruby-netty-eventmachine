@@ -3,6 +3,7 @@ require "netty-eventmachine/netty/pipeline"
 require "java"
 
 require "netty-eventmachine/connection"
+require "netty-eventmachine/timer"
 
 module EventMachine
   java_import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory
@@ -34,7 +35,12 @@ module EventMachine
 
   public # EventMachine API, run
   def self.run(&block)
-    # Nothing to do
     block.call
-  end
+    # TODO(sissel): we should block until netty exits.
+  end # def run
+
+  public # EventMachine API add_timer
+  def self.add_timer(delay, &block)
+    return EventMachine::Timer.new(delay, &block)
+  end # def add_timer
 end
