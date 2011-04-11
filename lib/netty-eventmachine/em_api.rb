@@ -20,7 +20,7 @@ module EventMachine
       )
 
       bootstrap = org.jboss.netty.bootstrap.ServerBootstrap.new(channelfactory)
-      bootstrap.setPipelineFactory(EventMachine::Netty::Pipeline.new(handlerclass))
+      bootstrap.setPipelineFactory(EventMachine::Netty::Pipeline.new(handlerclass, *args))
       # TODO(sissel): Make this tunable, maybe a 'class'-wide setting on
       # handlerclass?
       bootstrap.setOption("child.tcpNoDelay", true)
@@ -43,4 +43,19 @@ module EventMachine
   def self.add_timer(delay, &block)
     return EventMachine::Timer.new(delay, &block)
   end # def add_timer
+
+  # Implement next_tick as a timer since Netty has no notion of "ticks"
+  public # EventMachine API next_tick
+  def self.next_tick(&block)
+    self.add_timer(0, &block)
+    return nil
+  end # def next_tick
+
+  # Can't implement EM::fork_reactor, JRuby (and java) don't have fork. Why? On
+  # POSIX systems, fork doesn't keep any other pthreads, so all the management
+  # threads the JVM and JRuby run will be lost.
+  public # EventMachine API fork_reactor
+  def self.fork_reactor(&block)
+    raise NotImplemented.new
+  end # def fork_reactor
 end
