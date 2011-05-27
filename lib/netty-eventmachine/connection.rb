@@ -4,6 +4,7 @@ require "java"
 class EventMachine::Connection < org.jboss.netty.channel.SimpleChannelUpstreamHandler
   # add this interface
   include org.jboss.netty.channel.Channel
+  #include org.jboss.netty.channel.ChannelHandler
 
   USASCII = java.nio.charset.Charset.defaultCharset
   
@@ -13,11 +14,33 @@ class EventMachine::Connection < org.jboss.netty.channel.SimpleChannelUpstreamHa
     super()
   end
 
+  # EventMachine API, 
+  public
+  def self.connect(bind_addr, bind_port, host, port)
+    # TODO(sissel): 
+  end # def EventMachine::Connection.connect
+
+  private
+  def post_init_setup(context)
+    @peeraddr = context.getChannel.getRemoteAddress
+    p :port => @peeraddr.getPort
+    p :address => @peeraddr.getAddress
+  end # def post_init_setup
+
+  # org.jboss.netty.channel.Channel#channelConnected
+  public
+  def channelConnected(context, event)
+    if respond_to?(:post_init)
+      post_init_setup(context)
+      post_init
+    end
+  end # def channelConnected
+
   # org.jboss.netty.channel.Channel#messageReceived
   public 
   def messageReceived(context, event)
-    puts event.getMessage
     if respond_to?(:receive_data)
+      #p event.getMessage.toString(USASCII)
       receive_data(event.getMessage.toString(USASCII))
     end
   end # def messageReceived

@@ -20,7 +20,7 @@ module EventMachine
       )
 
       bootstrap = org.jboss.netty.bootstrap.ServerBootstrap.new(channelfactory)
-      bootstrap.setPipelineFactory(EventMachine::Netty::Pipeline.new(handlerclass, *args))
+      bootstrap.setPipelineFactory(EventMachine::Netty::Pipeline.new(handlerclass, *args, &block))
       # TODO(sissel): Make this tunable, maybe a 'class'-wide setting on
       # handlerclass?
       bootstrap.setOption("child.tcpNoDelay", true)
@@ -32,6 +32,11 @@ module EventMachine
       puts "EM.start_server with a module as handler not supported yet."
     end
   end # def start_server
+
+  public
+  def self.open_datagram_socket(address, port, handlerclass=nil, *args, &block)
+    # TODO(sissel): Implement
+  end # def open_datagram_socket
 
   public # EventMachine API, run
   def self.run(&block)
@@ -58,4 +63,9 @@ module EventMachine
   def self.fork_reactor(&block)
     raise NotImplemented.new
   end # def fork_reactor
+
+  public
+  def self.reactor_running?
+    return true
+  end
 end
