@@ -9,18 +9,18 @@ module EventMachine
   java_import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory
 
   public # standard EventMachine API, start_server
-  def self.start_server(address, port=nil, handlerclass=nil, *args, &block)
+  def self.start_server(address, port=nil, handler=nil, *args, &block)
     # handler can be a subclass of EM::Connection or a module implementing the
     # right methods
 
-    if handlerclass.is_a?(Class)
+    if handler.is_a?(Class)
       channelfactory = NioServerSocketChannelFactory.new(
         java.util.concurrent.Executors.newCachedThreadPool,
         java.util.concurrent.Executors.newCachedThreadPool
       )
 
       bootstrap = org.jboss.netty.bootstrap.ServerBootstrap.new(channelfactory)
-      bootstrap.setPipelineFactory(EventMachine::Netty::Pipeline.new(handlerclass, *args, &block))
+      bootstrap.setPipelineFactory(EventMachine::Netty::Pipeline.new(handler, *args, &block))
       # TODO(sissel): Make this tunable, maybe a 'class'-wide setting on
       # handlerclass?
       bootstrap.setOption("child.tcpNoDelay", true)
@@ -28,8 +28,11 @@ module EventMachine
 
       # TODO(sissel): async dns would be nice.
       bootstrap.bind(java.net.InetSocketAddress.new(address, port))
-    else
-      puts "EM.start_server with a module as handler not supported yet."
+    elsif handler.is_a?(Module)
+      # If we've got a module, mix it into an anonymous subclass of EM::Connection
+      klass = Object.const_set("GeneratedHandler", Class.new(EventMachine::Connection))
+      klass.send(:include, handler)
+      start_server(address, port, klass, args, &block)
     end
   end # def start_server
 

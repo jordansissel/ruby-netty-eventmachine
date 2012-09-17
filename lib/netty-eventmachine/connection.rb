@@ -84,4 +84,5 @@ class EventMachine::Connection < org.jboss.netty.channel.SimpleChannelUpstreamHa
     socketaddr = @channel.getRemoteAddress
     return [ socketaddr.getAddress.getHostAddress, socketaddr.getPort ]
   end # def get_peername
+
 end # class EventMachine::Connection < org.jboss.netty.channel.SimpleChannelUpstreamHandler
